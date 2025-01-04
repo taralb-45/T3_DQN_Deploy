@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tic Tac Toe</title>
+    <style>
+        body{
+            background-color: black;
+        }
+        .x{
+            display: block;            
+            background-color: black;
+            margin: 50px auto;
+            height: 80vmin;
+            width: 80vmin;
+            text-align: center;
+        }
+        .resetbtn{
+            margin-top: 3vmin;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-size: 3vmin;
+            background-color: black;
+            border: 3px solid white;
+            color: white;
+            padding: 2vmin;
+        }
+        .resetbtn:hover{
+            background-color: white;
+            color: black;
+            border: 3px solid white;
+        }
+        .y{
+            background-color: black;
+            text-align: center;
+            margin: 0 auto;
+        }
+        table{
+            background-color: black;
+            width: 100%;
+            height: 100%;
+        }
+        td {
+            background-color: black;
+            height: 33%;
+            width: 33%;
+            border: 3px solid white;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .btn{
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            border: 0;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-size: 20vmin;
+            /* margin-right: 5%;
+            margin-bottom: 5%; */
+        }
+        h1{
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+        .redglow {
+            text-shadow: 0 0 10px rgb(200, 0, 0), 0 0 20px rgb(150, 0, 0), 0 0 40px rgb(150, 0, 0);
+        }
+        .whiteglow {
+            text-shadow: 0 0 10px rgb(200, 200, 200), 0 0 20px rgb(150, 150, 150), 0 0 40px rgb(150, 150, 150);
+        }
+    </style>
+</head>
+<body>
+    <div class="x">
+        <h1 class="glow" style="color: white; margin-bottom: 6vmin; " id="heading">Click Anywhere to Start</h1>
+        <table class="tb">
+    
+            <tr class="row">
+                <td><button onclick="clicked(7)" class="btn" id="7"> </button></td>
+                <td><button onclick="clicked(8)" class="btn" id="8"> </button></td>
+                <td><button onclick="clicked(9)" class="btn" id="9"> </button></td>
+            </tr>
+            <tr class="row">
+                <td><button onclick="clicked(4)" class="btn" id="4"> </button></td>
+                <td><button onclick="clicked(5)" class="btn" id="5"> </button></td>
+                <td><button onclick="clicked(6)" class="btn" id="6"> </button></td>
+            </tr>
+            <tr class="row">
+                <td><button onclick="clicked(1)" class="btn" id="1"> </button></td>
+                <td><button onclick="clicked(2)" class="btn" id="2"> </button></td>
+                <td><button onclick="clicked(3)" class="btn" id="3"> </button></td>
+            </tr>
+    
+        </table>
+        <button onclick="reset()" class="cssbuttons-io resetbtn">
+            Reset
+        </button>
+        <!-- <button onclick="fetchNextMove()">aksjdvkasdjfj</button> -->
+    </div>
+
+
+    <div class="y">
+
+        <!-- <button type="button" class="btn"> -->
+        <!-- <strong>RESET</strong> -->
+        <!-- <div id="container-stars">
+          <div id="stars"></div>
+        </div> -->
+      
+        <!-- <div id="glow">
+          <div class="circle"></div>
+          <div class="circle"></div>
+        </div> -->
+      <!-- </button> -->
+      
+    </div>
+
+    <script>
+        count=0;
+        let game=[0,0,0,0,0,0,0,0,0];
+        function reset(){
+            count=0;
+            var heading = document.getElementById("heading");
+            heading.innerHTML="Click Anywhere to Start"
+            for (let i = 1; i < 10; i++) {
+                var btn = document.getElementById(i);
+                btn.innerHTML=" ";
+                btn.disabled=false;
+                btn.classList.remove("redglow");
+                btn.classList.remove("whiteglow");
+            }
+            console.log(game);
+        }
+        async function fetchNextMove(gamearray){
+            for (let i = 1; i < 10; i++) {
+                var btn = document.getElementById(i);
+                if(btn.innerHTML=="P")
+                gamearray[i-1]=1;
+                else if(btn.innerHTML=="AI")
+                gamearray[i-1]=2;
+            }
+            url='http://192.168.1.250:5556/sendhere'
+            return res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({'gamearray': gamearray}),
+            })
+            .then(
+                response => response.json()
+            )
+            .then( data => { return data; });
+
+            // let data = await res.json();
+            // console.log(data, "from outside fetch function");
+            // return res;
+            
+            // .then(function(data){
+                // x=data.move
+                // y=data.status
+                // console.log(data.move);
+                // console.log(data.status);
+                // console.log(data + " from request function");
+                // return data;
+            // });
+            // .catch(function(err) {
+            // console.log('Fetch Error :-S', err);
+            // });
+
+        }
+
+        function sleep (time) {
+            return new Promise((resolve) => setTimeout(resolve, time));
+        }
+
+        
+        async function clicked(x){
+            // play with ai       
+            count++;   
+            var btn = document.getElementById(x);
+            var heading = document.getElementById("heading");
+            heading.innerHTML="Ai's Turn";
+            btn.innerHTML="O";
+            btn.style.color="white";
+            btn.classList.add("whiteglow");
+            btn.disabled=true;
+            game=[0,0,0,0,0,0,0,0,0];
+            for (let i = 1; i < 10; i++) {
+                var btn = document.getElementById(i);
+                if(btn.innerHTML=="O")
+                    game[i-1]=1;
+                else if(btn.innerHTML=="AI")
+                    game[i-1]=2;
+            }
+            
+            let d = await fetchNextMove(game)
+            // console.log(d, "from clicked function");
+
+            console.log(game.toString(), "board")
+            console.log(d.move, "move of ai");
+            console.log(d.status, "status of game");
+            
+            if(count>=8){
+                heading.innerHTML="TIE !!"
+                d.status = 3
+            }
+            if(d.status==0){
+                var btn1 = document.getElementById(d.move+1);
+                sleep(1000).then(function(game) {
+                    heading.innerHTML="Player's Turn";
+                    btn1.innerHTML="AI";
+                    btn1.classList.add("redglow");
+                    btn1.style.color="red";
+                    btn1.disabled=true;                           
+                });
+                count++;
+                console.log(count, "count");
+            }
+            else if(d.status==1){
+                heading.innerHTML="Player WINS !!"
+                heading.style.color="green"
+            }
+            else if(d.status==2){
+                heading.innerHTML="AI WINS !!"
+                heading.style.color="red"
+            }
+
+            // manually play as ai
+            // if(count%2==0){
+            //     heading.innerHTML="Ai's Turn";
+            //     btn.innerHTML="O";
+            //     btn.style.color="white";
+            //     btn.classList.add("whiteglow");
+            //     btn.disabled=true;
+
+
+            // }
+            // else{  
+            //     heading.innerHTML="Player's Turn";
+            //     btn.innerHTML="AI";
+            //     btn.classList.add("redglow");
+            //     btn.style.color="red";
+            //     btn.disabled=true;
+            // }
+            // let game=[0,0,0,0,0,0,0,0,0];
+            // for (let i = 1; i < 10; i++) {
+            //     var btn = document.getElementById(i);
+            //     if(btn.innerHTML=="O")
+            //         game[i-1]=1;
+            //     else if(btn.innerHTML=="AI")
+            //         game[i-1]=(2);
+            // }
+            // console.log(game.toString())
+            // fetchNextMove(game)
+            // count++;
+        }
+
+        
+
+
+
+    </script>
+</body>
+</html>
