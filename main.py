@@ -5,10 +5,8 @@ from flask import Flask, render_template, request # type: ignore
 import random
 import flask_cors
 import json
-
-from torch import nn
-import torch.nn.functional as F
-import torch
+import onnx
+import onnxruntime
 import random
 from random import randrange, randint
 import math
@@ -33,12 +31,13 @@ def hello_world():
 def home():
     return render_template('main.html')
 
-target2 = nn.Sequential(
-        nn.Linear(27, 40),
-        nn.ReLU(),
-        nn.Linear(40, 9),
-        nn.Softmax() )
-target2 = torch.load("templates/target2.x", weights_only=False)
+model_name = 'model.onnx'
+onnx_model = onnx.load(model_name)
+onnx.checker.check_model(onnx_model)
+
+EP_list = ['CPUExecutionProvider']
+
+ort_session = onnxruntime.InferenceSession(model_name, providers=EP_list)
 
 @app.route('/sendhere', methods=['POST'])
 def sendhere():
@@ -55,7 +54,11 @@ def sendhere():
 
     
     board = x['gamearray']
-    move = torch.argmax(target2(oneHot(board))).item()
+    ort_inputs = {ort_session.get_inputs()[0].name: oneHotter(board)}
+    output = ort_session.run(None, ort_inputs)
+
+    move=argmax(output[0])
+
     status = checkAnyWin(board)
     data = {
         "move":move, # output move from the model
@@ -74,6 +77,34 @@ def sendhere():
 
     resp.headers = h
     return resp
+
+
+def oneHotter(game):
+    onehot=[]
+    for i in game:
+        if(i==0):
+            onehot.append(1)
+            onehot.append(0)
+            onehot.append(0)
+        elif(i==1):
+            onehot.append(0)
+            onehot.append(1)
+            onehot.append(0)
+        elif(i==2):
+            onehot.append(0)
+            onehot.append(0)
+            onehot.append(1)
+    return onehot
+
+def argmax(inp):
+    maximum=float('-inf')
+    index=0
+    for i in range(len(inp)):
+        if(inp[i]>maximum):
+            maximum=inp[i]
+            index=i     
+    return index        
+
 
 def checkVertical(positions):
     if(  (positions[6]==positions[3]==positions[0]==2)
@@ -141,4 +172,4 @@ if __name__ == '__main__':
 
     # run() method of Flask class runs the application 
     # on the local development server.
-    app.run(host='192.168.196.50', port=5550)  
+    app.run()  
